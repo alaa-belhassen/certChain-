@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { LogOut, Menu, ShieldCheck, Wallet, X } from 'lucide-react'
+import { ArrowLeft, LogOut, Menu, ShieldCheck, Wallet, X } from 'lucide-react'
 import { useWallet } from '../../context/WalletContext.jsx'
 
 const ROLE_ROUTES = {
-  Admin: '/admin',
-  'Émetteur': '/etablissement',
-  'Vérificateur': '/verifier',
-  Person: '/etudiant',
+  Admin: ['/admin'],
+  'Émetteur': ['/etablissement', '/etablissement/emettre'],
+  'Vérificateur': ['/verifier'],
+  Person: ['/etudiant'],
 }
 
 export default function Navbar() {
@@ -38,9 +38,11 @@ export default function Navbar() {
 
     if (wrong || !role) return
 
+    if (pathname.startsWith('/certificat/')) return
+
     const destination = ROLE_ROUTES[role]
-    if (destination) {
-      router.replace(destination)
+    if (destination && !destination.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
+      router.replace(destination[0])
       setOpen(false)
     }
   }, [account, pathname, role, router, wrong])
@@ -99,6 +101,7 @@ export default function Navbar() {
         : copied
           ? 'Copié'
           : short
+  const roleHome = ROLE_ROUTES[role]?.[0]
 
   return (
     <header className="nav-shell">
@@ -112,9 +115,14 @@ export default function Navbar() {
           </span>
         </a>
         <div className={`nav-links ${open ? 'is-open' : ''}`}>
-          <a href="/#how">Fonctionnement</a>
-          <a href="/#institutions">Pour les établissements</a>
-          <a href="/#docs">Docs</a>
+         {!account  ? <a href="/#how">Fonctionnement</a> : null}
+         {!account ? <a href="/#institutions">Pour les établissements</a> : null}
+          {!account  ?<a href="/#docs">Docs</a> : null}
+          {pathname.startsWith('/certificat/') && roleHome && (
+            <a className="flex " href={roleHome} onClick={() => setOpen(false)}>
+              <ArrowLeft size={14} className="mt-0.5 mr-2" /> {role === 'Person' ? 'Retour à mes certificats' : 'Retour à mon espace'}
+            </a>
+          )}
         </div>
         <div className="nav-actions">
 
